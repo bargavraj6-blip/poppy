@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video - Orbispop</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+            background: #000;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .video-container {
+            width: 100%;
+            max-width: 428px;
+            height: 100vh;
+            margin: 0 auto;
+            position: relative;
+            overflow-y: auto;
+            scroll-snap-type: y mandatory;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+
+        .video-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .video-item {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            scroll-snap-align: start;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+            background: linear-gradient(180deg, rgba(0,0,0,0.5) 0%, transparent 100%);
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #fff;
+        }
+
+        .back-btn:active {
+            transform: scale(0.9);
+        }
+
+        .more-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #fff;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        /* Bottom Info */
+        .video-info {
+            position: absolute;
+            bottom: 80px;
+            left: 0;
+            right: 0;
+            padding: 0 16px;
+            color: #fff;
+            z-index: 10;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .user-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #fff;
+        }
+
+        .user-details {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .user-location {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .user-rating {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .user-rating svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .user-rating span {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .video-text {
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 12px;
+            max-width: 70%;
+        }
+
+        /* Actions */
+        .video-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn:active {
+            transform: scale(0.9);
+        }
+
+        .action-btn svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .location-btn {
+            margin-left: auto;
+            background: none;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: #EF4444;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Video Progress */
+        .video-progress {
+            position: absolute;
+            bottom: 20px;
+            left: 16px;
+            right: 16px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            overflow: hidden;
+            z-index: 10;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: #EF4444;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        /* Image Count Badge */
+        .image-count-badge {
+            position: absolute;
+            top: 70px;
+            right: 16px;
+            background: rgba(0, 0, 0, 0.65);
+            color: #fff;
+            padding: 5px 11px;
+            border-radius: 14px;
+            font-size: 12px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+
+        /* Volume Button */
+        .volume-btn {
+            position: absolute;
+            bottom: 100px;
+            right: 16px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.65);
+            border: none;
+            border-radius: 50%;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            font-size: 18px;
+            z-index: 10;
+        }
+
+        .volume-btn:active {
+            transform: scale(0.9);
+        }
+
+        /* Circle Transition */
+        .circle-transition {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: #fff;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            pointer-events: none;
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .circle-transition.active {
+            width: 200vw;
+            height: 200vw;
+        }
+    </style>
+</head>
+<body>
+    <div class="video-container" id="videoContainer">
+        <!-- Video 1 -->
+        <div class="video-item" data-index="0">
+            <video loop muted playsinline id="video1">
+                <source src="https://cdn.pixabay.com/video/2024/01/29/198719-909143449_large.mp4" type="video/mp4">
+            </video>
+            
+            <div class="top-bar">
+                <button class="back-btn" id="backBtn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+                <button class="more-btn">⋮</button>
+            </div>
+
+            <div class="image-count-badge">1/2</div>
+
+            <button class="volume-btn" data-video="video1">🔊</button>
+
+            <div class="video-info">
+                <div class="user-info">
+                    <img src="https://i.pravatar.cc/100?img=20" alt="User" class="user-avatar">
+                    <div class="user-details">
+                        <div class="user-name">Jamoe sora</div>
+                        <div class="user-location">Surat, Gujarat</div>
+                    </div>
+                    <div class="user-rating">
+                        <svg viewBox="0 0 24 24" fill="#EF4444">
+                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                        </svg>
+                        <span>(4.3)</span>
+                    </div>
+                </div>
+
+                <div class="video-text">
+                    I used to Jump Straight into visuals. Open Figma. Start Designing. Ship it fast!
+                </div>
+
+                <div class="video-actions">
+                    <button class="action-btn upvote-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 19V5M5 12l7-7 7 7"/>
+                        </svg>
+                        <span>12</span>
+                    </button>
+                    <button class="action-btn downvote-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14M19 12l-7 7-7-7"/>
+                        </svg>
+                        <span>2</span>
+                    </button>
+                    <button class="action-btn comment-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        <span>1</span>
+                    </button>
+                    <button class="action-btn share-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="18" cy="5" r="3"/>
+                            <circle cx="6" cy="12" r="3"/>
+                            <circle cx="18" cy="19" r="3"/>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                        </svg>
+                    </button>
+                    <button class="location-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#EF4444">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                        </svg>
+                        Location
+                    </button>
+                </div>
+            </div>
+
+            <div class="video-progress">
+                <div class="progress-bar" id="progress1"></div>
+            </div>
+        </div>
+
+        <!-- Video 2 -->
+        <div class="video-item" data-index="1">
+            <video loop muted playsinline id="video2">
+                <source src="https://cdn.pixabay.com/video/2022/11/07/138817-768747034_large.mp4" type="video/mp4">
+            </video>
+            
+            <div class="top-bar">
+                <button class="back-btn" id="backBtn2">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+                <button class="more-btn">⋮</button>
+            </div>
+
+            <div class="image-count-badge">1/2</div>
+
+            <button class="volume-btn" data-video="video2">🔊</button>
+
+            <div class="video-info">
+                <div class="user-info">
+                    <img src="https://i.pravatar.cc/100?img=21" alt="User" class="user-avatar">
+                    <div class="user-details">
+                        <div class="user-name">Sarah Johnson</div>
+                        <div class="user-location">Mumbai, Maharashtra</div>
+                    </div>
+                    <div class="user-rating">
+                        <svg viewBox="0 0 24 24" fill="#EF4444">
+                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                        </svg>
+                        <span>(4.7)</span>
+                    </div>
+                </div>
+
+                <div class="video-text">
+                    Beautiful landscapes and amazing adventures around the world!
+                </div>
+
+                <div class="video-actions">
+                    <button class="action-btn upvote-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 19V5M5 12l7-7 7 7"/>
+                        </svg>
+                        <span>45</span>
+                    </button>
+                    <button class="action-btn downvote-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14M19 12l-7 7-7-7"/>
+                        </svg>
+                        <span>3</span>
+                    </button>
+                    <button class="action-btn comment-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        <span>12</span>
+                    </button>
+                    <button class="action-btn share-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="18" cy="5" r="3"/>
+                            <circle cx="6" cy="12" r="3"/>
+                            <circle cx="18" cy="19" r="3"/>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                        </svg>
+                    </button>
+                    <button class="location-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#EF4444">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                        </svg>
+                        Location
+                    </button>
+                </div>
+            </div>
+
+            <div class="video-progress">
+                <div class="progress-bar" id="progress2"></div>
+            </div>
+        </div>
+
+        <!-- Video 3 -->
+        <div class="video-item" data-index="2">
+            <video loop muted playsinline id="video3">
+                <source src="https://cdn.pixabay.com/video/2023/05/10/161909-825517955_large.mp4" type="video/mp4">
+            </video>
+            
+            <div class="top-bar">
+                <button class="back-btn" id="backBtn3">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+                <button class="more-btn">⋮</button>
+            </div>
+
+            <div class="image-count-badge">1/2</div>
+
+            <button class="volume-btn" data-video="video3">🔊</button>
+
+            <div class="video-info">
+                <div class="user-info">
+                    <img src="https://i.pravatar.cc/100?img=22" alt="User" class="user-avatar">
+                    <div class="user-details">
+                        <div class="user-name">Michael Chen</div>
+                        <div class="user-location">Delhi, India</div>
+                    </div>
+                    <div class="user-rating">
+                        <svg viewBox="0 0 24 24" fill="#EF4444">
+                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                        </svg>
+                        <span>(4.5)</span>
+                    </div>
+                </div>
+
+                <div class="video-text">
+                    Capturing moments that matter. Life is beautiful!
+                </div>
+
+                <div class="video-actions">
+                    <button class="action-btn upvote-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 19V5M5 12l7-7 7 7"/>
+                        </svg>
+                        <span>89</span>
+                    </button>
+                    <button class="action-btn downvote-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 5v14M19 12l-7 7-7-7"/>
+                        </svg>
+                        <span>5</span>
+                    </button>
+                    <button class="action-btn comment-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        <span>23</span>
+                    </button>
+                    <button class="action-btn share-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="18" cy="5" r="3"/>
+                            <circle cx="6" cy="12" r="3"/>
+                            <circle cx="18" cy="19" r="3"/>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+                        </svg>
+                    </button>
+                    <button class="location-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#EF4444">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                        </svg>
+                        Location
+                    </button>
+                </div>
+            </div>
+
+            <div class="video-progress">
+                <div class="progress-bar" id="progress3"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="circle-transition" id="circleTransition"></div>
+
+    <script>
+        const videoContainer = document.getElementById('videoContainer');
+        const circleTransition = document.getElementById('circleTransition');
+        const videos = document.querySelectorAll('video');
+        let currentVideoIndex = 0;
+
+        // Circle Transition Back
+        function circleTransitionBack() {
+            circleTransition.classList.add('active');
+            setTimeout(() => {
+                window.location.href = 'home.html';
+            }, 600);
+        }
+
+        // Back buttons
+        document.getElementById('backBtn').addEventListener('click', circleTransitionBack);
+        document.getElementById('backBtn2').addEventListener('click', circleTransitionBack);
+        document.getElementById('backBtn3').addEventListener('click', circleTransitionBack);
+
+        // Volume buttons
+        document.querySelectorAll('.volume-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const videoId = btn.dataset.video;
+                const video = document.getElementById(videoId);
+                video.muted = !video.muted;
+                btn.textContent = video.muted ? '🔊' : '🔇';
+            });
+        });
+
+        // Video Progress
+        videos.forEach((video, index) => {
+            const progressBar = document.getElementById(`progress${index + 1}`);
+            
+            video.addEventListener('timeupdate', () => {
+                const progress = (video.currentTime / video.duration) * 100;
+                progressBar.style.width = progress + '%';
+            });
+        });
+
+        // Intersection Observer for auto-play
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const video = entry.target.querySelector('video');
+                if (entry.isIntersecting) {
+                    video.play();
+                    currentVideoIndex = parseInt(entry.target.dataset.index);
+                } else {
+                    video.pause();
+                    video.currentTime = 0;
+                }
+            });
+        }, { threshold: 0.5 });
+
+        document.querySelectorAll('.video-item').forEach(item => {
+            observer.observe(item);
+        });
+
+        // Action buttons
+        document.querySelectorAll('.action-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (btn.classList.contains('upvote-btn') || btn.classList.contains('downvote-btn')) {
+                    btn.classList.toggle('active');
+                }
+            });
+        });
+
+        // Location buttons
+        document.querySelectorAll('.location-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                circleTransition.classList.add('active');
+                setTimeout(() => {
+                    window.location.href = 'map.html';
+                }, 600);
+            });
+        });
+
+        // Auto-start first video
+        setTimeout(() => {
+            videos[0].play();
+        }, 100);
+    </script>
+</body>
+</html>

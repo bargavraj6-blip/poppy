@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Orbispop</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: hidden;
+            background: #FFFFFF;
+            touch-action: pan-y;
+        }
+
+        /* Splash Screen */
+        .splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: all 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .splash-screen.slide-out {
+            transform: translateX(-100%);
+            filter: blur(75px);
+            opacity: 0;
+        }
+
+        .logo {
+            font-size: 68px;
+            font-weight: 900;
+            letter-spacing: -3px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .logo .black {
+            color: #000000;
+        }
+
+        .logo .red {
+            color: #E31E24;
+        }
+
+        /* Main Onboarding Screen */
+        .onboarding-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: #FFFFFF;
+            display: none;
+            flex-direction: column;
+            opacity: 0;
+        }
+
+        .onboarding-screen.active {
+            display: flex;
+            animation: fadeIn 0.6s ease-out 0.9s forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Status Bar */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 24px;
+            font-size: 17px;
+            font-weight: 600;
+            color: #000;
+        }
+
+        .status-icons {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            font-size: 16px;
+        }
+
+        /* Logo at top */
+        .top-logo {
+            text-align: center;
+            margin: 30px 0 40px 0;
+        }
+
+        .top-logo .logo {
+            font-size: 52px;
+        }
+
+        /* Orbit Container */
+        .orbit-container {
+            position: relative;
+            width: 100%;
+            max-width: 380px;
+            height: 380px;
+            margin: 0 auto 40px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Orbit circles - STATIC */
+        .orbit {
+            position: absolute;
+            border: 2px dashed #E0E0E0;
+            border-radius: 50%;
+        }
+
+        .orbit.outer {
+            width: 340px;
+            height: 340px;
+        }
+
+        .orbit.middle {
+            width: 220px;
+            height: 220px;
+        }
+
+        /* Center Orbispop Logo */
+        .center-logo {
+            position: relative;
+            z-index: 20;
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FF1744 0%, #E31E24 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            box-shadow: 0 12px 40px rgba(227, 30, 36, 0.35);
+            border: 5px solid #FFFFFF;
+        }
+
+        .center-logo-text {
+            font-size: 18px;
+            font-weight: 900;
+            color: #FFFFFF;
+            letter-spacing: -1.5px;
+            line-height: 1.1;
+            text-align: center;
+        }
+
+        /* Connection lines - STATIC */
+        .connection-line {
+            position: absolute;
+            height: 3px;
+            background: linear-gradient(90deg, #E31E24, #FF1744);
+            transform-origin: left center;
+            box-shadow: 0 0 10px rgba(227, 30, 36, 0.5);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .connection-line.show {
+            animation: drawLine 0.5s ease-out forwards;
+        }
+
+        .connection-line.hide {
+            animation: fadeOutLine 0.3s ease-out forwards;
+        }
+
+        @keyframes drawLine {
+            from {
+                width: 0;
+                opacity: 0;
+            }
+            to {
+                width: var(--line-length);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOutLine {
+            to {
+                opacity: 0;
+            }
+        }
+
+        /* Rotating container - EVERYTHING rotates */
+        .rotating-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            animation: slowRotate 120s linear infinite;
+        }
+
+        @keyframes slowRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* User icons */
+        .user-icon {
+            position: absolute;
+            border-radius: 50%;
+            border: 4px solid #FFFFFF;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+
+        .user-icon:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        .user-icon.layer-2 {
+            width: 64px;
+            height: 64px;
+        }
+
+        .user-icon.layer-3 {
+            width: 68px;
+            height: 68px;
+        }
+
+        .user-icon.hub {
+            border-color: #E31E24;
+            box-shadow: 0 8px 32px rgba(227, 30, 36, 0.4);
+        }
+
+        /* Rotating dots - positioned between icons */
+        .orbit-dot {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #E31E24;
+            box-shadow: 0 4px 12px rgba(227, 30, 36, 0.3);
+            z-index: 10;
+            transform: translate(-50%, -50%);
+        }
+
+        .orbit-dot.gray {
+            background: #757575;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Content section */
+        .content {
+            text-align: center;
+            padding: 0 32px;
+            margin-bottom: 30px;
+        }
+
+        .content h1 {
+            font-size: 36px;
+            font-weight: 900;
+            line-height: 1.15;
+            margin-bottom: 18px;
+            color: #000;
+            letter-spacing: -1px;
+        }
+
+        .content .highlight {
+            background: #E31E24;
+            color: #FFFFFF;
+            padding: 6px 16px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        .content p {
+            font-size: 17px;
+            color: #6B7280;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        /* Get Started Button */
+        .button-container {
+            padding: 0 32px 40px 32px;
+            margin-top: auto;
+        }
+
+        .get-started-btn {
+            width: 100%;
+            padding: 20px;
+            background: #E31E24;
+            color: #FFFFFF;
+            border: none;
+            border-radius: 16px;
+            font-size: 19px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            box-shadow: 0 8px 24px rgba(227, 30, 36, 0.35);
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.3px;
+        }
+
+        .get-started-btn:active {
+            transform: scale(0.97);
+            box-shadow: 0 4px 12px rgba(227, 30, 36, 0.4);
+        }
+
+        /* Bottom bar */
+        .bottom-bar {
+            position: fixed;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140px;
+            height: 5px;
+            background: #000;
+            border-radius: 100px;
+        }
+
+        /* Mobile optimization */
+        @media (max-width: 420px) {
+            .orbit-container {
+                max-width: 340px;
+                height: 340px;
+            }
+            .orbit.outer {
+                width: 300px;
+                height: 300px;
+            }
+            .orbit.middle {
+                width: 190px;
+                height: 190px;
+            }
+            .center-logo {
+                width: 90px;
+                height: 90px;
+            }
+            .center-logo-text {
+                font-size: 16px;
+            }
+            .content h1 {
+                font-size: 30px;
+            }
+            .top-logo .logo {
+                font-size: 44px;
+            }
+            .user-icon.layer-2 {
+                width: 56px;
+                height: 56px;
+            }
+            .user-icon.layer-3 {
+                width: 60px;
+                height: 60px;
+            }
+            .top-logo {
+                margin: 20px 0 30px 0;
+            }
+            .orbit-container {
+                margin: 0 auto 30px auto;
+            }
+        }
+
+        @media (max-width: 380px) {
+            .orbit-container {
+                max-width: 300px;
+                height: 300px;
+            }
+            .orbit.outer {
+                width: 260px;
+                height: 260px;
+            }
+            .orbit.middle {
+                width: 170px;
+                height: 170px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Splash Screen -->
+    <div class="splash-screen" id="splashScreen">
+        <div class="logo">
+            <span class="black">Orbis</span><span class="red">pop</span>
+        </div>
+    </div>
+
+    <!-- Onboarding Screen -->
+    <div class="onboarding-screen" id="onboardingScreen">
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div>9:41</div>
+            <div class="status-icons">
+                <span>📶</span>
+                <span>📡</span>
+                <span>🔋</span>
+            </div>
+        </div>
+
+        <!-- Logo -->
+        <div class="top-logo">
+            <div class="logo">
+                <span class="black">Orbis</span><span class="red">pop</span>
+            </div>
+        </div>
+
+        <!-- Orbit Container -->
+        <div class="orbit-container" id="orbitContainer">
+            <!-- Static orbit circles -->
+            <div class="orbit outer"></div>
+            <div class="orbit middle"></div>
+
+            <!-- Lines container - STATIC -->
+            <div id="linesContainer"></div>
+
+            <!-- Rotating container - icons AND dots rotate -->
+            <div class="rotating-container" id="rotatingContainer">
+                <!-- Icons and dots will be added here by JavaScript -->
+            </div>
+
+            <!-- Center Orbispop Logo - STATIC -->
+            <div class="center-logo">
+                <div class="center-logo-text">Orbis<br>pop</div>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <h1>
+                WITH <span class="highlight">PEOPLE</span><br>
+                ALL AROUND THE<br>
+                WORLD
+            </h1>
+            <p>Discover real stories, real vibes — from any location you choose.</p>
+        </div>
+
+        <!-- Button -->
+        <div class="button-container">
+    <button class="get-started-btn" id="getStartedBtn" onclick="window.location.href='signup.html'">Get Started</button>
+</div>
+
+
+        <!-- Bottom bar -->
+        <div class="bottom-bar"></div>
+    </div>
+
+    <script>
+        // User avatars
+        const avatars = [
+            'https://i.pravatar.cc/150?img=1',
+            'https://i.pravatar.cc/150?img=5',
+            'https://i.pravatar.cc/150?img=8',
+            'https://i.pravatar.cc/150?img=12',
+            'https://i.pravatar.cc/150?img=15',
+            'https://i.pravatar.cc/150?img=20',
+            'https://i.pravatar.cc/150?img=25',
+            'https://i.pravatar.cc/150?img=33'
+        ];
+
+        // Layer 3: 5 icons on outer circle - evenly distributed (72° apart)
+        const layer3Config = [
+            { angle: 0, avatar: avatars[0], layer: 3, id: 0 },
+            { angle: 72, avatar: avatars[1], layer: 3, id: 1 },
+            { angle: 144, avatar: avatars[2], layer: 3, id: 2 },
+            { angle: 216, avatar: avatars[3], layer: 3, id: 3 },
+            { angle: 288, avatar: avatars[4], layer: 3, id: 4 }
+        ];
+
+        // Layer 2: 3 icons on middle circle - positioned between layer 3 icons
+        const layer2Config = [
+            { angle: 36, avatar: avatars[5], layer: 2, id: 5 },
+            { angle: 180, avatar: avatars[6], layer: 2, id: 6 },
+            { angle: 252, avatar: avatars[7], layer: 2, id: 7 }
+        ];
+
+        // Dots positioned BETWEEN each pair of icons
+        const dotsConfig = [
+            { angle: 36, radius: 170, gray: true },   // Between icon 0 and 1 on outer
+            { angle: 108, radius: 170, gray: false }, // Between icon 1 and 2 on outer
+            { angle: 180, radius: 170, gray: true },  // Between icon 2 and 3 on outer
+            { angle: 252, radius: 170, gray: false }, // Between icon 3 and 4 on outer
+            { angle: 324, radius: 170, gray: true },  // Between icon 4 and 0 on outer
+            { angle: 108, radius: 110, gray: false }, // Between icons on middle
+            { angle: 288, radius: 110, gray: true }   // Between icons on middle
+        ];
+
+        const allIcons = [...layer2Config, ...layer3Config];
+        let currentLines = [];
+        let animationFrame;
+        let isAnimating = false;
+
+        // Splash screen transition
+        setTimeout(() => {
+            const splash = document.getElementById('splashScreen');
+            const onboarding = document.getElementById('onboardingScreen');
+            
+            splash.classList.add('slide-out');
+            onboarding.classList.add('active');
+            
+            setTimeout(() => {
+                initializeOrbit();
+            }, 1000);
+        }, 3000);
+
+        function initializeOrbit() {
+            const container = document.getElementById('orbitContainer');
+            const rotatingContainer = document.getElementById('rotatingContainer');
+            
+            const centerX = container.offsetWidth / 2;
+            const centerY = container.offsetHeight / 2;
+
+            // Create all user icons
+            allIcons.forEach((config) => {
+                const icon = document.createElement('div');
+                icon.className = `user-icon layer-${config.layer}`;
+                icon.style.backgroundImage = `url(${config.avatar})`;
+                icon.dataset.id = config.id;
+                icon.dataset.angle = config.angle;
+                icon.dataset.layer = config.layer;
+                
+                const radius = config.layer === 2 ? 110 : 170;
+                const rad = (config.angle * Math.PI) / 180;
+                const x = centerX + radius * Math.cos(rad);
+                const y = centerY + radius * Math.sin(rad);
+                
+                icon.style.left = `${x}px`;
+                icon.style.top = `${y}px`;
+                
+                rotatingContainer.appendChild(icon);
+            });
+
+            // Create rotating dots
+            dotsConfig.forEach((config) => {
+                const dot = document.createElement('div');
+                dot.className = `orbit-dot ${config.gray ? 'gray' : ''}`;
+                dot.dataset.angle = config.angle;
+                dot.dataset.radius = config.radius;
+                
+                const rad = (config.angle * Math.PI) / 180;
+                const x = centerX + config.radius * Math.cos(rad);
+                const y = centerY + config.radius * Math.sin(rad);
+                
+                dot.style.left = `${x}px`;
+                dot.style.top = `${y}px`;
+                
+                rotatingContainer.appendChild(dot);
+            });
+
+            // Start connection animation
+            startConnectionAnimation();
+        }
+
+        function getIconPositionInStaticSpace(icon) {
+            const container = document.getElementById('orbitContainer');
+            const rotatingContainer = document.getElementById('rotatingContainer');
+            
+            const centerX = container.offsetWidth / 2;
+            const centerY = container.offsetHeight / 2;
+            
+            const baseAngle = parseFloat(icon.dataset.angle);
+            const layer = parseInt(icon.dataset.layer);
+            const radius = layer === 2 ? 110 : 170;
+            
+            const style = window.getComputedStyle(rotatingContainer);
+            const matrix = style.transform;
+            let currentRotation = 0;
+            
+            if (matrix !== 'none') {
+                const values = matrix.split('(')[1].split(')')[0].split(',');
+                const a = parseFloat(values[0]);
+                const b = parseFloat(values[1]);
+                currentRotation = Math.atan2(b, a);
+            }
+            
+            const totalAngle = (baseAngle * Math.PI / 180) + currentRotation;
+            const x = centerX + radius * Math.cos(totalAngle);
+            const y = centerY + radius * Math.sin(totalAngle);
+            
+            return { x, y };
+        }
+
+        function generateConnectionPattern() {
+            const patterns = [
+                // Pattern 1: Star from center connecting all icons
+                () => {
+                    return allIcons.map(icon => ({ from: 'center', to: icon.id }));
+                },
+                
+                // Pattern 2: Connect all icons in sequence (circle)
+                () => {
+                    const connections = [];
+                    connections.push({ from: 'center', to: allIcons[0].id });
+                    for (let i = 0; i < allIcons.length; i++) {
+                        const next = (i + 1) % allIcons.length;
+                        connections.push({ from: allIcons[i].id, to: allIcons[next].id });
+                    }
+                    return connections;
+                },
+                
+                // Pattern 3: Hub pattern - 1-2 hubs connecting to others
+                () => {
+                    const connections = [];
+                    const numHubs = Math.random() > 0.5 ? 2 : 1;
+                    const hubs = [];
+                    
+                    // Select hubs
+                    const availableIndices = [...allIcons];
+                    for (let i = 0; i < numHubs; i++) {
+                        const randomIndex = Math.floor(Math.random() * availableIndices.length);
+                        hubs.push(availableIndices[randomIndex].id);
+                        availableIndices.splice(randomIndex, 1);
+                    }
+                    
+                    // Connect center to hubs
+                    hubs.forEach(hubId => {
+                        connections.push({ from: 'center', to: hubId });
+                    });
+                    
+                    // Each hub connects to 2-3 others
+                    hubs.forEach(hubId => {
+                        const numConnections = 2 + Math.floor(Math.random() * 2);
+                        const available = allIcons.filter(icon => 
+                            icon.id !== hubId && !hubs.includes(icon.id)
+                        );
+                        
+                        const targets = available
+                            .sort(() => Math.random() - 0.5)
+                            .slice(0, numConnections);
+                        
+                        targets.forEach(target => {
+                            connections.push({ from: hubId, to: target.id });
+                        });
+                    });
+                    
+                    return connections;
+                }
+            ];
+            
+            const randomPattern = patterns[Math.floor(Math.random() * patterns.length)];
+            return randomPattern();
+        }
+
+        function drawConnections() {
+            if (isAnimating) return;
+            isAnimating = true;
+            
+            const linesContainer = document.getElementById('linesContainer');
+            const rotatingContainer = document.getElementById('rotatingContainer');
+            
+            // Remove old hub indicators
+            rotatingContainer.querySelectorAll('.user-icon').forEach(icon => {
+                icon.classList.remove('hub');
+            });
+            
+            // Remove old lines
+            currentLines.forEach(line => {
+                line.classList.remove('show');
+                line.classList.add('hide');
+                setTimeout(() => line.remove(), 300);
+            });
+            currentLines = [];
+            
+            // Generate new pattern
+            const connections = generateConnectionPattern();
+            
+            // Draw new lines with staggered animation
+            connections.forEach((conn, index) => {
+                setTimeout(() => {
+                    const line = document.createElement('div');
+                    line.className = 'connection-line';
+                    line.dataset.fromId = conn.from;
+                    line.dataset.toId = conn.to;
+                    
+                    linesContainer.appendChild(line);
+                    currentLines.push(line);
+                    
+                    setTimeout(() => line.classList.add('show'), 50);
+                }, index * 100);
+            });
+            
+            setTimeout(() => {
+                isAnimating = false;
+            }, connections.length * 100 + 500);
+        }
+
+        function updateLines() {
+            const container = document.getElementById('orbitContainer');
+            const rotatingContainer = document.getElementById('rotatingContainer');
+            const icons = rotatingContainer.querySelectorAll('.user-icon');
+            
+            const centerX = container.offsetWidth / 2;
+            const centerY = container.offsetHeight / 2;
+            const centerRadius = 55;
+            
+            currentLines.forEach(line => {
+                const fromId = line.dataset.fromId;
+                const toId = line.dataset.toId;
+                
+                let startX, startY, endX, endY;
+                
+                if (fromId === 'center') {
+                    const toIcon = Array.from(icons).find(icon => icon.dataset.id === toId);
+                    if (!toIcon) return;
+                    
+                    const toPos = getIconPositionInStaticSpace(toIcon);
+                    const angleToIcon = Math.atan2(toPos.y - centerY, toPos.x - centerX);
+                    
+                    startX = centerX + centerRadius * Math.cos(angleToIcon);
+                    startY = centerY + centerRadius * Math.sin(angleToIcon);
+                    
+                    const toLayer = parseInt(toIcon.dataset.layer);
+                    const toIconRadius = toLayer === 2 ? 32 : 34;
+                    
+                    endX = toPos.x - toIconRadius * Math.cos(angleToIcon);
+                    endY = toPos.y - toIconRadius * Math.sin(angleToIcon);
+                } else {
+                    const fromIcon = Array.from(icons).find(icon => icon.dataset.id === fromId);
+                    const toIcon = Array.from(icons).find(icon => icon.dataset.id === toId);
+                    
+                    if (!fromIcon || !toIcon) return;
+                    
+                    const fromPos = getIconPositionInStaticSpace(fromIcon);
+                    const toPos = getIconPositionInStaticSpace(toIcon);
+                    
+                    const fromLayer = parseInt(fromIcon.dataset.layer);
+                    const toLayer = parseInt(toIcon.dataset.layer);
+                    const fromIconRadius = fromLayer === 2 ? 32 : 34;
+                    const toIconRadius = toLayer === 2 ? 32 : 34;
+                    
+                    const angleFrom = Math.atan2(toPos.y - fromPos.y, toPos.x - fromPos.x);
+                    const angleTo = Math.atan2(fromPos.y - toPos.y, fromPos.x - toPos.x);
+                    
+                    startX = fromPos.x + fromIconRadius * Math.cos(angleFrom);
+                    startY = fromPos.y + fromIconRadius * Math.sin(angleFrom);
+                    
+                    endX = toPos.x + toIconRadius * Math.cos(angleTo);
+                    endY = toPos.y + toIconRadius * Math.sin(angleTo);
+                }
+                
+                const deltaX = endX - startX;
+                const deltaY = endY - startY;
+                const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+                
+                line.style.setProperty('--line-length', length + 'px');
+                line.style.left = startX + 'px';
+                line.style.top = startY + 'px';
+                line.style.transform = `rotate(${angle}deg)`;
+            });
+        }
+
+        function startConnectionAnimation() {
+            // Draw initial pattern
+            setTimeout(() => {
+                drawConnections();
+            }, 500);
+            
+            // Change pattern every 3 seconds
+            setInterval(() => {
+                drawConnections();
+            }, 3000);
+            
+            // Update lines continuously
+            function animate() {
+                if (currentLines.length > 0) {
+                    updateLines();
+                }
+                animationFrame = requestAnimationFrame(animate);
+            }
+            
+            animate();
+        }
+
+        // Button click handler
+        document.getElementById('getStartedBtn').addEventListener('click', function() {
+            alert('Ready to connect to signup.html!');
+        });
+    </script>
+</body>
+</html>
